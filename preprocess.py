@@ -5,17 +5,20 @@ from pycocotools.coco import COCO
 import numpy as np
 import skimage.io as io
 import matplotlib.pyplot as plt
+import cv2
 
 
-def get_data(dataDir='.', num_images=100):
+def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     """
 	Given a file path to the downloaded COCO API folder, and the 
-    number of images to load, return the images as a list of numpy
-    arrays, and their corresponding captions as a list.
+    number of images to load, return the processed images as a numpy
+    array, and their corresponding captions as a list.
 	:param dataDir: file path for the cocoapi folder
 	:param num_images:  an integer indicating number of images to load
-	:return: list of normalized NumPy array of inputs and list of captions, where 
-	each image are of type np.float32 and has size (width, height, num_channels)
+    :param input_height: required height of image inputs by the CNN encoder
+    :param input_weight: required width of image inputs by the CNN encoder
+	:return: resized and normalized NumPy array of input images with size 
+    num_images*input_height*input_width*channels, and list of captions.
 	"""
     # initialize COCO API for instance annotations
     dataType = 'val2014'
@@ -31,6 +34,7 @@ def get_data(dataDir='.', num_images=100):
 
     input_images = []
     caption_labels = []
+    dim = (input_height, input_width)
     for x in range(num_images):
         # get the id of target image
         ann_id = ids[x]
@@ -41,8 +45,11 @@ def get_data(dataDir='.', num_images=100):
         directory = os.path.join(dataDir, 'cocoapi/images/val2014/{}'.format(url.split('/')[-1]))
         I = io.imread(directory)
 
+        # resize image to specified dimension
+        I_resized = cv2.resize(I, dim)
+
         # normalize the image array
-        I = np.float32(np.true_divide(I, 255))
+        I_resized = np.float32(np.true_divide(I_resized, 255))
 
 
         # fetch the captions of the image from downloaded local data
@@ -53,7 +60,10 @@ def get_data(dataDir='.', num_images=100):
             captions.append(ann['caption'])
 
         # append the fetched image and caption to their corresponding list
-        input_images.append(I)
+        input_images.append(I_resized)
         caption_labels.append(captions)
     
-    return input_images, caption_labels
+    inputs = np.stack(input_images)
+    return inputs, caption_labels
+
+# get_data(num_images=1000)
