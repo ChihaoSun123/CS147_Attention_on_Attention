@@ -12,13 +12,14 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     """
 	Given a file path to the downloaded COCO API folder, and the 
     number of images to load, return the processed images as a numpy
-    array, and their corresponding captions as a list.
+    array, and their corresponding captions as a list in their ids.
 	:param dataDir: file path for the cocoapi folder
 	:param num_images:  an integer indicating number of images to load
     :param input_height: required height of image inputs by the CNN encoder
     :param input_weight: required width of image inputs by the CNN encoder
 	:return: resized and normalized NumPy array of input images with size 
-    num_images*input_height*input_width*channels, and list of captions.
+    num_images*input_height*input_width*channels, a list of captions, and
+    a dictionary that maps words to their id's.
 	"""
     # initialize COCO API for instance annotations
     dataType = 'val2014'
@@ -55,15 +56,67 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
         # fetch the captions of the image from downloaded local data
         annIds = coco_caps.getAnnIds(imgIds=img['id'])
         anns = coco_caps.loadAnns(annIds)
-        captions = []
-        for ann in anns:
-            captions.append(ann['caption'])
-
-        # append the fetched image and caption to their corresponding list
         input_images.append(I_resized)
-        caption_labels.append(captions)
-    
-    inputs = np.stack(input_images)
-    return inputs, caption_labels
+        caption_labels.append(anns[0]['caption'].lower().split('.')[0].split(' '))
 
-# get_data(num_images=1000)
+    index_dictionary = create_dictionary(caption_labels)
+    id_labels = convert_to_id(caption_labels, index_dictionary)
+    return input_images, id_labels, index_dictionary
+
+def create_dictionary(sentences):
+    """
+	Create the dictionary given preprocessed sentences.
+	:param sentences: captions of images
+	:return: a dictionary that maps words to their id's
+	"""
+    count_dictionary = {}
+    index_dictionary = {}
+    index_num = 0
+
+    for s in sentences:
+        for word in s:
+            if word == '':
+                continue
+            elif word not in count_dictionary:
+                count_dictionary[word] = 0
+            else:
+                count_dictionary[word] += 1
+
+    for key in count_dictionary:
+        if count_dictionary[key] <= 5:
+            continue
+        else:
+            index_dictionary[key] = index_num
+            index_num += 1
+    index_dictionary['UNK'] = index_num
+    return index_dictionary
+
+def convert_to_id(sentences, dictionary):
+    """
+	Convert the sentences in words to their corresponding id's
+	:param sentences: captions of images
+    :param dictionary: dictionary that maps words to their id's
+	:return: sentences as arrays of their word id's
+	"""
+    sentences_in_id = []
+    for s in sentences:
+        s_in_id = []
+        for word in s:
+            if word == '':
+                continue
+            if word in dictionary:
+                s_in_id.append(dictionary[word])
+            else:
+                s_in_id.append(dictionary['UNK'])
+        sentences_in_id.append(s_in_id)
+    return sentences_in_id
+
+
+print("preprocessing 100 images and their captions.")
+input_images, labels, index_dictionary = get_data(num_images=100)
+print("Shape of input images: ")
+print(np.asarray(input_images).shape)
+print("captions in word id's: ")
+print(labels)
+print("vocabulary constructed from the captions: ")
+print(index_dictionary)
