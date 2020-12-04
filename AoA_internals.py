@@ -154,37 +154,35 @@ class Multi_Headed(tf.keras.layers.Layer):
 
 
 class Transformer_Block(tf.keras.layers.Layer):
-	def __init__(self, emb_sz, is_decoder, multi_headed=False):
+	def __init__(self, emb_sz, is_decoder, multi_headed=True):
 		super(Transformer_Block, self).__init__()
 
-		self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder) if not multi_headed else Multi_Headed(emb_sz,use_mask=is_decoder)
 		self.is_decoder = is_decoder
 		if self.is_decoder:
 			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False) if not multi_headed else Multi_Headed(emb_sz,use_mask=False)
-
-		self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
+		else:
+			self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder) if not multi_headed else Multi_Headed(emb_sz,use_mask=is_decoder)
+			# Decoder AoA does not use layer norm or recurrent connection!
+			self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
 
 	@tf.function
 	def call(self, inputs, context=None):
 		"""
-		:param inputs: tensor of [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ]
-		:context: tensor of [BATCH_SIZE x FRENCH_WINDOW_SIZE x EMBEDDING_SIZE ] or None
-			default=None, This is context from the encoder to be used as Keys and Values in self-attention function
+		:param inputs: 
+		:context: the refined feature tensor A (for the decoder, for keys and values, otherwise None)
 		"""
-
-		# Attention with a recurrent connection and layer normalization
-		atten_out = self.self_atten(inputs,inputs,inputs)
-		atten_out += inputs
-		atten_normalized = self.layer_norm(atten_out)
 
 		if self.is_decoder:
 			assert context is not None,"Decoder blocks require context"
-			context_atten_out = self.self_context_atten(context,context,atten_normalized)
-			context_atten_out += atten_normalized
-			atten_normalized = self.layer_norm(context_atten_out)
+			# No layer norm or recurrent connection for Decoder AoA Module
+			atten_out = self.self_context_atten(context,context,inputs)
+		else:
+			# Attention with a recurrent connection and layer normalization
+			atten_out = self.self_atten(inputs,inputs,inputs)
+			atten_out += inputs
+			atten_out = self.layer_norm(atten_out)
 
-
-		return tf.nn.relu(atten_normalized)
+		return atten_out
 
 class Position_Encoding_Layer(tf.keras.layers.Layer):
 	def __init__(self, window_sz, emb_sz):
