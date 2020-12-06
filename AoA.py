@@ -25,14 +25,14 @@ class Transformer_AoA(tf.keras.layers.Layer):
 
 
 	@tf.function
-	def call(self, input):
+	def call(self, input, context=None):
 		"""
 		:param input:
 		:return output [batch_size x window_size x vocab_size]
 		"""
 
 		if self.is_decoder:
-			output = self.decoder(input)
+			output = self.decoder(input, context)
 		else:	
 			output = self.encoder_0(input)
 			output = self.encoder_1(output)
