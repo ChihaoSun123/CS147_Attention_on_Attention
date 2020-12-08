@@ -37,7 +37,7 @@ class AoAEncoder(tf.keras.layers.Layer):
         self.model = MaskRCNN(mode='inference', model_dir=self.MODEL_DIR, config=self.config)
         # Load weights trained on MS-COCO
         self.model.load_weights(self.COCO_MODEL_PATH, by_name=True)
-        self.embedding_sz = 75
+        self.embedding_sz = 6
         self.AoA = Transformer_AoA(self.embedding_sz)
 
     def call(self, inputs):
