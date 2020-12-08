@@ -43,3 +43,24 @@ class Transformer_AoA(tf.keras.layers.Layer):
 		
 		return output
 
+def main():	
+	# Shape test
+	inputs = tf.random.uniform(shape=(10,100,6))
+	print("Input shape:")
+	print(inputs.shape)
+	test_refinement = Transformer_AoA(6)
+	outputs = test_refinement(inputs)
+	print("Output shape:")
+	print(outputs.shape)
+
+	inputs = tf.random.uniform(shape=(10,100,13))
+	print("Input shape:")
+	print(inputs.shape)
+	test_refinement = Transformer_AoA(13)
+	outputs = test_refinement(inputs)
+	print("Output shape:")
+	print(outputs.shape)
+
+
+if __name__ == '__main__':
+	main()
