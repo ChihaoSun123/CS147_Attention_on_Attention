@@ -59,9 +59,9 @@ class AoAEncoder(tf.keras.layers.Layer):
         refined_expanded = self.expander(refined)
         return refined_expanded
 
-inputs = get_data(num_images=10)
-images = inputs[0]
-encoder = AoAEncoder()
-res = encoder.call(images)
-print("res: ")
-print(res.shape)
+#inputs = get_data(num_images=10)
+#images = inputs[0]
+#encoder = AoAEncoder()
+#res = encoder.call(images)
+#print("res: ")
+#print(res.shape)

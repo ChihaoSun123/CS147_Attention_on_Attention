@@ -134,10 +134,10 @@ def convert_to_id(sentences, dictionary):
 
 
 #print("preprocessing 100 images and their captions.")
-input_images, labels, index_dictionary = get_data(num_images=100)
-print("Shape of input images: ")
-print(input_images.shape)
-print("Shape of captions: ")
-print(labels.shape)
+#input_images, labels, index_dictionary = get_data(num_images=100)
+#print("Shape of input images: ")
+#print(input_images.shape)
+#print("Shape of captions: ")
+#print(labels.shape)
 #print("vocabulary constructed from the captions: ")
 #print(index_dictionary)

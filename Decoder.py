@@ -5,7 +5,7 @@ from AoA import Transformer_AoA
 
 
 
-class Model(tf.keras.Model):
+class Decoder_Model(tf.keras.layers.Layer):
     def __init__(self, vocab_size):
         """
         The Model class predicts the caption of images given their encodings.
@@ -13,7 +13,7 @@ class Model(tf.keras.Model):
         :param vocab_size: The number of unique words in the caption dictionary.
         """
 
-        super(Model, self).__init__()
+        super(Decoder_Model, self).__init__()
 
         self.vocab_size = vocab_size
         self.embedding_size = 1024
@@ -47,10 +47,10 @@ class Model(tf.keras.Model):
         AoA_reduced = tf.reduce_mean(encoder_output, axis=[1])
 
         #TODO: concatenate processed encoder_output with vectorized inputs
-        vectorized_inputs = tf.math.add(vectorized_inputs, AoA_reduced)
+        vectorized_inputs = tf.math.add(vectorized_inputs, tf.reshape(AoA_reduced,[batchSize, 1, self.embedding_size]))
 
         lstm_output, a, b = self.lstm(vectorized_inputs, initial_state=initial_state)
-        attended_output = self.AoA.call(lstm_output, AoA_hat)
+        attended_output = self.AoA.call(lstm_output, encoder_output)
         dense_layer_1_output = self.dense_layer_1(attended_output)
         dense_layer_2_output = self.dense_layer_2(dense_layer_1_output)
         probs = tf.nn.softmax(dense_layer_2_output)
@@ -70,9 +70,9 @@ class Model(tf.keras.Model):
         return loss
 
 # dummy test of vocab size 50
-model = Model(50)
-AoA_hat = tf.zeros([1, 30, 1024])
-caption_list = np.array([[1,2,3,4,5], [1, 3, 5, 7, 9]])
+#model = Decoder_Model(50)
+#AoA_hat = tf.zeros([1, 30, 1024])
+#caption_list = np.array([[1,2,3,4,5], [1, 3, 5, 7, 9]])
 
-probs = model.call(caption_list, AoA_hat)
-print(probs.shape)
+#probs = model.call(caption_list, AoA_hat)
+#print(probs.shape)
