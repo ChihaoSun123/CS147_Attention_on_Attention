@@ -16,9 +16,9 @@ class Model(tf.keras.Model):
         super(Model, self).__init__()
 
         self.vocab_size = vocab_size
-        self.embedding_size = 128
+        self.embedding_size = 1024
         self.batch_size = 64
-        self.RNN_size = 128
+        self.RNN_size = 1024
         self.learning_rate = 0.01
         self.hidden_layer_size = 1024
 
@@ -71,7 +71,7 @@ class Model(tf.keras.Model):
 
 # dummy test of vocab size 50
 model = Model(50)
-AoA_hat = tf.zeros([1, 30, 128])
+AoA_hat = tf.zeros([1, 30, 1024])
 caption_list = np.array([[1,2,3,4,5], [1, 3, 5, 7, 9]])
 
 probs = model.call(caption_list, AoA_hat)
