@@ -18,8 +18,8 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     :param input_height: required height of image inputs by the CNN encoder
     :param input_weight: required width of image inputs by the CNN encoder
 	:return: resized and normalized NumPy array of input images with size 
-    num_images*input_height*input_width*channels, a list of captions, and
-    a dictionary that maps words to their id's.
+    num_images*input_height*input_width*channels, a numpy array of captions
+    with size num_images*15, and a dictionary that maps words to their id's.
 	"""
     # initialize COCO API for instance annotations
     dataType = 'val2014'
@@ -36,6 +36,7 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     input_images = []
     caption_labels = []
     dim = (input_height, input_width)
+    caption_length_sum = 0
     for x in range(num_images):
         # get the id of target image
         ann_id = ids[x]
@@ -58,10 +59,30 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
         anns = coco_caps.loadAnns(annIds)
         input_images.append(I_resized)
         caption_labels.append(anns[0]['caption'].lower().split('.')[0].split(' '))
+        caption_length_sum += len(caption_labels[-1])
 
+    #print(caption_labels)
+    #print(caption_length_sum/num_images)
+    caption_labels = add_START_and_STOP(caption_labels)
     index_dictionary = create_dictionary(caption_labels)
     id_labels = convert_to_id(caption_labels, index_dictionary)
-    return input_images, id_labels, index_dictionary
+    
+    return np.array(input_images), np.array(id_labels), index_dictionary
+
+def add_START_and_STOP(caption_labels):
+    for x in range(len(caption_labels)):
+        if '' in caption_labels[x]:
+            caption_labels[x].remove('')
+        caption_labels[x] = caption_labels[x][:13]
+        caption_labels[x].insert(0, "<START>")
+        caption_labels[x].append("<STOP>")
+        if len(caption_labels[x]) < 15:
+            for i in range(15-len(caption_labels[x])):
+                caption_labels[x].append("<PAD>")
+        
+        #print(len(caption_labels[x]))
+    return caption_labels
+
 
 def create_dictionary(sentences):
     """
@@ -112,11 +133,11 @@ def convert_to_id(sentences, dictionary):
     return sentences_in_id
 
 
-print("preprocessing 100 images and their captions.")
+#print("preprocessing 100 images and their captions.")
 input_images, labels, index_dictionary = get_data(num_images=100)
 print("Shape of input images: ")
-print(np.asarray(input_images).shape)
-print("captions in word id's: ")
-print(labels)
-print("vocabulary constructed from the captions: ")
-print(index_dictionary)
+print(input_images.shape)
+print("Shape of captions: ")
+print(labels.shape)
+#print("vocabulary constructed from the captions: ")
+#print(index_dictionary)
