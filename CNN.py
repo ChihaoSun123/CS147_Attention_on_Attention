@@ -33,12 +33,14 @@ class AoAEncoder(tf.keras.layers.Layer):
         # Local path to trained weights file
         self.COCO_MODEL_PATH = os.path.join(self.ROOT_DIR, "mask_rcnn_coco.h5")
         self.config = InferenceConfig()
+        self.hidden_layer_size = 1024
         # Create model object in inference mode.
         self.model = MaskRCNN(mode='inference', model_dir=self.MODEL_DIR, config=self.config)
         # Load weights trained on MS-COCO
         self.model.load_weights(self.COCO_MODEL_PATH, by_name=True)
         self.embedding_sz = 6
         self.AoA = Transformer_AoA(self.embedding_sz)
+        self.expander = tf.keras.layers.Dense(self.hidden_layer_size)
 
     def call(self, inputs):
         """
@@ -54,9 +56,12 @@ class AoAEncoder(tf.keras.layers.Layer):
         detections, mrcnn = self.model.detect(inputs, verbose=0)
         print(tf.shape(detections))
         refined = self.AoA(detections)
-        return refined
+        refined_expanded = self.expander(refined)
+        return refined_expanded
 
-# inputs = get_data()
-# images = inputs[0]
-# encoder = AoAEncoder()
-# encoder.call(images)
+inputs = get_data(num_images=10)
+images = inputs[0]
+encoder = AoAEncoder()
+res = encoder.call(images)
+print("res: ")
+print(res.shape)
