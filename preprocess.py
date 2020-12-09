@@ -6,6 +6,11 @@ import numpy as np
 import skimage.io as io
 import matplotlib.pyplot as plt
 import cv2
+import sys
+import tensorflow as tf
+from mrcnn import utils
+from mrcnn.config import Config
+from mrcnn.model import MaskRCNN
 
 
 def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
@@ -67,7 +72,21 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     index_dictionary = create_dictionary(caption_labels)
     id_labels = convert_to_id(caption_labels, index_dictionary)
     
-    return np.array(input_images), np.array(id_labels), index_dictionary
+    images, labels, dict =  np.array(input_images), np.array(id_labels), index_dictionary
+
+    # Directory to save logs and trained model
+    ROOT_DIR = os.path.abspath("../")
+    MODEL_DIR = os.path.join(ROOT_DIR, "logs")
+    # Local path to trained weights file
+    COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+    config = InferenceConfig()
+    # Create model object in inference mode.
+    model = MaskRCNN(mode='inference', model_dir=MODEL_DIR, config=config)
+    # Load weights trained on MS-COCO
+    model.load_weights(COCO_MODEL_PATH, by_name=True)
+    detections, mrcnn = model.detect(images, verbose=0)
+    print(tf.shape(detections))
+    return detections, labels, dict
 
 def add_START_and_STOP(caption_labels):
     for x in range(len(caption_labels)):
@@ -133,11 +152,15 @@ def convert_to_id(sentences, dictionary):
     return sentences_in_id
 
 
-#print("preprocessing 100 images and their captions.")
-#input_images, labels, index_dictionary = get_data(num_images=100)
-#print("Shape of input images: ")
-#print(input_images.shape)
-#print("Shape of captions: ")
-#print(labels.shape)
-#print("vocabulary constructed from the captions: ")
-#print(index_dictionary)
+class InferenceConfig(Config):
+    """Configuration for training on MS COCO.
+    Derives from the base Config class and overrides values specific
+    to the COCO dataset.
+    """
+    NAME = "coco"
+
+    # Batch size
+    IMAGES_PER_GPU = 10
+
+    # Number of classes (including background)
+    NUM_CLASSES = 1 + 80  # COCO has 80 classes

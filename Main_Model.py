@@ -79,10 +79,10 @@ def test(model, test_image, test_caption, padding_index):
     return my_perplexity, my_accuracy
 
 def main():
-    images, captions, dictionary = get_data(num_images = 20)
-    train_image = images[0:20]
+    images, captions, dictionary = get_data(num_images = 10)
+    train_image = images[0:10]
     #test_image = images[900:1000]
-    train_caption = captions[0:20]
+    train_caption = captions[0:10]
     #test_caption = captions[900:1000]
 
     print("dictionary size: ")
@@ -92,7 +92,7 @@ def main():
     # test whether model produces result of expected dimensions
     decoder_input = train_caption[0:,0:14]
     labels = train_caption[0:,1:15]
-    probs = model(train_image[0:10], train_caption[0:10])
+    probs = model(images, train_caption[0:10])
     print("probs shape: ")
     print(probs.shape)
 

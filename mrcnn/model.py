@@ -1855,9 +1855,9 @@ class MaskRCNN():
                             "For example, use 256, 320, 384, 448, 512, ... etc. ")
 
         # Inputs
-        input_image = tf.keras.layers.Input(
+        input_image = tf.keras.Input(
             shape=[None, None, config.IMAGE_SHAPE[2]], name="input_image")
-        input_image_meta = tf.keras.layers.Input(shape=[config.IMAGE_META_SIZE],
+        input_image_meta = tf.keras.Input(shape=[config.IMAGE_META_SIZE],
                                     name="input_image_meta")
         if mode == "training":
             # RPN GT
@@ -1970,16 +1970,16 @@ class MaskRCNN():
         if mode == "training":
             # Class ID mask to mark class IDs supported by the dataset the image
             # came from.
-            active_class_ids = tf.keras.layers.Lambda(
+            active_class_ids = tf.keras.Lambda(
                 lambda x: parse_image_meta_graph(x)["active_class_ids"]
                 )(input_image_meta)
 
             if not config.USE_RPN_ROIS:
                 # Ignore predicted ROIs and use ROIs provided as an input.
-                input_rois = tf.keras.layers.Input(shape=[config.POST_NMS_ROIS_TRAINING, 4],
+                input_rois = tf.keras.Input(shape=[config.POST_NMS_ROIS_TRAINING, 4],
                                       name="input_roi", dtype=np.int32)
                 # Normalize coordinates
-                target_rois = tf.keras.layers.Lambda(lambda x: norm_boxes_graph(
+                target_rois = tf.keras.Lambda(lambda x: norm_boxes_graph(
                     x, K.shape(input_image)[1:3]))(input_rois)
             else:
                 target_rois = rpn_rois
@@ -2054,11 +2054,11 @@ class MaskRCNN():
                                               config.NUM_CLASSES,
                                               train_bn=config.TRAIN_BN)
 
-            model = tf.keras.models.Model([input_image, input_image_meta, input_anchors],
+            model = tf.keras.Model([input_image, input_image_meta, input_anchors],
                              [detections, mrcnn_class, mrcnn_bbox,
                                  mrcnn_mask, rpn_rois, rpn_class, rpn_bbox],
                              name='mask_rcnn')
-
+            model.trainable = False
         # Add multi-GPU support.
         if config.GPU_COUNT > 1:
             from mrcnn.parallel_model import ParallelModel
@@ -2481,6 +2481,9 @@ class MaskRCNN():
             if full_masks else np.empty(original_image_shape[:2] + (0,))
 
         return boxes, class_ids, scores, full_masks
+
+    def get_feats(self, images):
+        return self.keras_model.predict([images])
 
     def detect(self, images, verbose=0):
         """Runs the detection pipeline.
