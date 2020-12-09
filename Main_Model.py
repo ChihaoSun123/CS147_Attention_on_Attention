@@ -49,7 +49,7 @@ def train(model, train_image, train_caption, padding_index):
         with tf.GradientTape() as tape:
             probs = model(train_image[start_index:end_index], decoder_input[start_index:end_index])
             print("shape of probs: ")
-            print(probs.shape)
+            print(probs.shape)   
             loss = model.loss(probs, labels[start_index:end_index], mask[start_index:end_index])
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -57,8 +57,8 @@ def train(model, train_image, train_caption, padding_index):
         end_index += model.batch_size
 
 def test(model, test_image, test_caption, padding_index):
-    decoder_input = train_caption[0:,0:14]
-    labels = train_caption[0:,1:15]
+    decoder_input = test_caption[0:,0:14]
+    labels = test_caption[0:,1:15]
     mask = tf.convert_to_tensor(np.where(np.asarray(labels)==padding_index, 0, 1))
     start_index = 0
     end_index = start_index + model.batch_size
@@ -66,7 +66,7 @@ def test(model, test_image, test_caption, padding_index):
     accurate_count = 0
 
     while end_index <= test_image.shape[0]:
-        probs = model(train_image[start_index:end_index], decoder_input[start_index:end_index])
+        probs = model(test_image[start_index:end_index], decoder_input[start_index:end_index])
         total_loss += model.loss(probs, labels[start_index:end_index], mask[start_index:end_index])
         temp1 = model.accuracy_function(probs, labels[start_index:end_index], mask[start_index:end_index])
         temp2 = tf.reduce_sum(mask[start_index:end_index])
@@ -81,25 +81,25 @@ def test(model, test_image, test_caption, padding_index):
 def main():
     images, captions, dictionary = get_data(num_images = 10)
     train_image = images[0:10]
-    #test_image = images[900:1000]
+    test_image = images[0:10]
     train_caption = captions[0:10]
-    #test_caption = captions[900:1000]
+    test_caption = captions[0:10]
 
     print("dictionary size: ")
     print(len(dictionary))
     model = Main_Model(len(dictionary))
 
     # test whether model produces result of expected dimensions
-    decoder_input = train_caption[0:,0:14]
-    labels = train_caption[0:,1:15]
-    probs = model(images, train_caption[0:10])
-    print("probs shape: ")
-    print(probs.shape)
+    #decoder_input = train_caption[0:,0:14]
+    #labels = train_caption[0:,1:15]
+    #probs = model(images, train_caption[0:10])
+    #print("probs shape: ")
+    #print(probs.shape)
 
     train(model, train_image, train_caption, dictionary['<PAD>'])
-    #perplexity, accuracy = test(model, test_image, test_caption, dictionary['<PAD>'])
-    #print('perplexity:', perplexity)
-	#print('accuracy:', accuracy)
+    perplexity, accuracy = test(model, test_image, test_caption, dictionary['<PAD>'])
+    print('perplexity:', perplexity)
+    print('accuracy:', accuracy)
 
 
 if __name__ == '__main__':
