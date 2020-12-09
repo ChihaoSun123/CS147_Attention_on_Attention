@@ -56,18 +56,6 @@ class Decoder_Model(tf.keras.layers.Layer):
         probs = tf.nn.softmax(dense_layer_2_output)
 
         return probs
-    
-    def loss(self, probs, labels):
-        """
-        The loss will be calculated through force teaching. We compare the softmax probabilities
-        with the labels to obtain the loss.
-        :param probs: Output from the decoder
-        :param labels:
-        :return:
-        """
-        losses = tf.keras.losses.sparse_categorical_crossentropy(labels, probs)
-        loss = tf.reduce_mean(losses)
-        return loss
 
 # dummy test of vocab size 50
 #model = Decoder_Model(50)
