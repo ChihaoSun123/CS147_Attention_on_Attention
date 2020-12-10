@@ -101,7 +101,7 @@ def get_data_from_API(dataDir='.', num_images=100, input_height=512, input_width
     model = MaskRCNN(mode='inference', model_dir=MODEL_DIR, config=config)
     # Load weights trained on MS-COCO
     model.load_weights(COCO_MODEL_PATH, by_name=True)
-    detections, mrcnn = model.detect(images, verbose=0)
+    detections = model.detect(images, verbose=0)
     print(tf.shape(detections))
     np.savetxt('RCNN_output.txt', detections.reshape(detections.shape[0], -1))
     np.savetxt('labels.txt', labels)

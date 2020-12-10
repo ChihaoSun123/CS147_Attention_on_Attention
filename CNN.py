@@ -11,7 +11,7 @@ class AoAEncoder(tf.keras.layers.Layer):
     def __init__(self):
         super(AoAEncoder, self).__init__()
         self.hidden_layer_size = 1024
-        self.embedding_sz = 6
+        self.embedding_sz = 81
         self.AoA = Transformer_AoA(self.embedding_sz)
         self.expander = tf.keras.layers.Dense(self.hidden_layer_size)
 
