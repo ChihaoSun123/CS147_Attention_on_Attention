@@ -79,11 +79,11 @@ def test(model, test_image, test_caption, padding_index):
     return my_perplexity, my_accuracy
 
 def main():
-    images, captions, dictionary = get_data(num_images = 10)
-    train_image = images[0:10]
-    test_image = images[0:10]
-    train_caption = captions[0:10]
-    test_caption = captions[0:10]
+    images, captions, dictionary = get_data(num_images = 2)
+    train_image = images[0:20]
+    test_image = images[20:30]
+    train_caption = captions[0:20]
+    test_caption = captions[20:30]
 
     print("dictionary size: ")
     print(len(dictionary))

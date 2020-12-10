@@ -11,9 +11,20 @@ import tensorflow as tf
 from mrcnn import utils
 from mrcnn.config import Config
 from mrcnn.model import MaskRCNN
+import pickle
 
+def get_data(num_images = 100, input_height=512, input_width=512):
+    try:
+        detections = np.loadtxt('RCNN_output.txt')
+        detections = detections.reshape(detections.shape[0], 100, 6)
+        labels = np.loadtxt('labels.txt')
+        with open('dictionary.pickle', 'rb') as handle:
+            dictionary = pickle.load(handle)
+        return detections, labels, dictionary
+    except:
+        return get_data_from_API(num_images=num_images, input_height=input_height, input_width=input_width)
 
-def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
+def get_data_from_API(dataDir='.', num_images=100, input_height=512, input_width=512):
     """
 	Given a file path to the downloaded COCO API folder, and the 
     number of images to load, return the processed images as a numpy
@@ -26,6 +37,7 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     num_images*input_height*input_width*channels, a numpy array of captions
     with size num_images*15, and a dictionary that maps words to their id's.
 	"""
+
     # initialize COCO API for instance annotations
     dataType = 'val2014'
     instances_annFile = os.path.join(dataDir, 'cocoapi/annotations/instances_{}.json'.format(dataType))
@@ -72,7 +84,7 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     index_dictionary = create_dictionary(caption_labels)
     id_labels = convert_to_id(caption_labels, index_dictionary)
     
-    images, labels, dict =  np.array(input_images), np.array(id_labels), index_dictionary
+    images, labels, dictionary =  np.array(input_images), np.array(id_labels), index_dictionary
 
     # Directory to save logs and trained model
     ROOT_DIR = os.path.abspath("../")
@@ -86,7 +98,11 @@ def get_data(dataDir='.', num_images=100, input_height=512, input_width=512):
     model.load_weights(COCO_MODEL_PATH, by_name=True)
     detections, mrcnn = model.detect(images, verbose=0)
     print(tf.shape(detections))
-    return detections, labels, dict
+    #np.savetxt('RCNN_output.txt', detections.reshape(detections.shape[0], -1))
+    #np.savetxt('labels.txt', labels)
+    #with open('dictionary.pickle', 'wb') as handle:
+    #    pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return detections, labels, dictionary
 
 def add_START_and_STOP(caption_labels):
     for x in range(len(caption_labels)):
@@ -160,7 +176,9 @@ class InferenceConfig(Config):
     NAME = "coco"
 
     # Batch size
-    IMAGES_PER_GPU = 10
+    IMAGES_PER_GPU = 20
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 80  # COCO has 80 classes
+
+get_data(num_images = 20)
