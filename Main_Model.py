@@ -49,7 +49,7 @@ def train(model, train_image, train_caption, padding_index):
         with tf.GradientTape() as tape:
             probs = model(train_image[start_index:end_index], decoder_input[start_index:end_index])
             print("shape of probs: ")
-            print(probs.shape)   
+            print(probs.shape)
             loss = model.loss(probs, labels[start_index:end_index], mask[start_index:end_index])
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -79,15 +79,14 @@ def test(model, test_image, test_caption, padding_index):
     return my_perplexity, my_accuracy
 
 def main():
-    images, captions, dictionary = get_data(num_images = 2)
+    images, captions, dictionary = get_data(num_images = 30)
     train_image = images[0:20]
     test_image = images[20:30]
     train_caption = captions[0:20]
     test_caption = captions[20:30]
 
-    print("dictionary size: ")
-    print(len(dictionary))
-    model = Main_Model(len(dictionary))
+    #print("dictionary size: ")
+    #print(len(dictionary))
 
     # test whether model produces result of expected dimensions
     #decoder_input = train_caption[0:,0:14]
@@ -96,10 +95,25 @@ def main():
     #print("probs shape: ")
     #print(probs.shape)
 
-    train(model, train_image, train_caption, dictionary['<PAD>'])
-    perplexity, accuracy = test(model, test_image, test_caption, dictionary['<PAD>'])
-    print('perplexity:', perplexity)
-    print('accuracy:', accuracy)
+    model = Main_Model(len(dictionary))
+    counter = tf.Variable(0)
+
+    ckpt = tf.train.Checkpoint(model = model, counter = counter)
+    manager = tf.train.CheckpointManager(ckpt, './tf_ckpts', max_to_keep=3)
+
+    for x in range(4):
+        if manager.latest_checkpoint:
+            print("Restored from {}".format(manager.latest_checkpoint))
+        else:
+            print("Initializing from scratch.")
+
+        train(model, train_image, train_caption, dictionary['<PAD>'])
+        ckpt.counter.assign_add(1)
+        manager.save()
+        print('This is the run {} of this program'.format(ckpt.counter.read_value()))
+        perplexity, accuracy = test(model, test_image, test_caption, dictionary['<PAD>'])
+        print('perplexity:', perplexity)
+        print('accuracy:', accuracy)
 
 
 if __name__ == '__main__':

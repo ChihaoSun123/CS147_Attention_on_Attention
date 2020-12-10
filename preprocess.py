@@ -20,7 +20,12 @@ def get_data(num_images = 100, input_height=512, input_width=512):
         labels = np.loadtxt('labels.txt')
         with open('dictionary.pickle', 'rb') as handle:
             dictionary = pickle.load(handle)
-        return detections, labels, dictionary
+        #print(type(detections))
+        print("dictionary: ")
+        print(dictionary)
+        print(labels)
+        print(type(labels[0][0]))
+        return detections, labels.astype(np.int32), dictionary
     except:
         return get_data_from_API(num_images=num_images, input_height=input_height, input_width=input_width)
 
@@ -98,10 +103,10 @@ def get_data_from_API(dataDir='.', num_images=100, input_height=512, input_width
     model.load_weights(COCO_MODEL_PATH, by_name=True)
     detections, mrcnn = model.detect(images, verbose=0)
     print(tf.shape(detections))
-    #np.savetxt('RCNN_output.txt', detections.reshape(detections.shape[0], -1))
-    #np.savetxt('labels.txt', labels)
-    #with open('dictionary.pickle', 'wb') as handle:
-    #    pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    np.savetxt('RCNN_output.txt', detections.reshape(detections.shape[0], -1))
+    np.savetxt('labels.txt', labels)
+    with open('dictionary.pickle', 'wb') as handle:
+        pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return detections, labels, dictionary
 
 def add_START_and_STOP(caption_labels):
@@ -176,9 +181,7 @@ class InferenceConfig(Config):
     NAME = "coco"
 
     # Batch size
-    IMAGES_PER_GPU = 20
+    IMAGES_PER_GPU = 30
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 80  # COCO has 80 classes
-
-get_data(num_images = 20)
