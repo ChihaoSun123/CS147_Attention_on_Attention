@@ -68,10 +68,8 @@ class Multi_Headed(tf.keras.layers.Layer):
 		super(Multi_Headed, self).__init__()
 		
 		# Initialize heads
-		self.split_emb_sz = int((1/2)*emb_sz)
-		# int(emb_sz/8)
-
-		# self.remainder_sz = emb_sz - (7*self.split_emb_sz)
+		self.split_emb_sz = int(emb_sz/8)
+		self.remainder_sz = emb_sz - (7*self.split_emb_sz)
 
 		self.head_0 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
 		self.head_1 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
@@ -80,12 +78,12 @@ class Multi_Headed(tf.keras.layers.Layer):
 		self.head_4 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
 		self.head_5 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
 		self.head_6 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
-		self.head_7 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
+		self.head_7 = Atten_Head(emb_sz, self.remainder_sz, use_mask=use_mask)
 		# print(self.split_emb_sz)
 		# print(self.remainder_sz)
 
 		# Matrix for concatenated vectors, W^O
-		self.WO = self.add_weight(name="weightsO",shape=[8*self.split_emb_sz,emb_sz])
+		self.WO = self.add_weight(name="weightsO",shape=[emb_sz,emb_sz])
 
 		# AoA Information:
 		self.information_v = tf.keras.layers.Dense(units=emb_sz, activation=None, use_bias=True)

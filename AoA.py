@@ -61,6 +61,14 @@ def main():
 	print("Output shape:")
 	print(outputs.shape)
 
+	inputs = tf.random.uniform(shape=(10,100,81))
+	print("Input shape:")
+	print(inputs.shape)
+	test_refinement = Transformer_AoA(81)
+	outputs = test_refinement(inputs)
+	print("Output shape:")
+	print(outputs.shape)
+
 
 if __name__ == '__main__':
 	main()
