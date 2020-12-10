@@ -15,16 +15,15 @@ import pickle
 
 def get_data(num_images = 100, input_height=512, input_width=512):
     try:
-        detections = np.loadtxt('RCNN_output.txt')
-        detections = detections.reshape(detections.shape[0], 100, 6)
-        labels = np.loadtxt('labels.txt')
-        with open('dictionary.pickle', 'rb') as handle:
+        RCNN_output_file_name = 'RCNN_output' + str(num_images) + '.txt'
+        label_file_name = 'labels' + str(num_images) + '.txt'
+        dictionary_file_name = 'dictionary' + str(num_images) + '.pickle'
+        detections = np.loadtxt(RCNN_output_file_name)
+        detections = detections.reshape(detections.shape[0], 1000, 81)
+        labels = np.loadtxt(label_file_name)
+        with open(dictionary_file_name, 'rb') as handle:
             dictionary = pickle.load(handle)
-        #print(type(detections))
-        print("dictionary: ")
-        print(dictionary)
-        print(labels)
-        print(type(labels[0][0]))
+        
         return detections, labels.astype(np.int32), dictionary
     except:
         return get_data_from_API(num_images=num_images, input_height=input_height, input_width=input_width)
@@ -103,9 +102,13 @@ def get_data_from_API(dataDir='.', num_images=100, input_height=512, input_width
     model.load_weights(COCO_MODEL_PATH, by_name=True)
     detections = model.detect(images, verbose=0)
     print(tf.shape(detections))
-    np.savetxt('RCNN_output.txt', detections.reshape(detections.shape[0], -1))
-    np.savetxt('labels.txt', labels)
-    with open('dictionary.pickle', 'wb') as handle:
+
+    RCNN_output_file_name = 'RCNN_output' + str(num_images) + '.txt'
+    label_file_name = 'labels' + str(num_images) + '.txt'
+    dictionary_file_name = 'dictionary' + str(num_images) + '.pickle'
+    np.savetxt(RCNN_output_file_name, detections.reshape(detections.shape[0], -1))
+    np.savetxt(label_file_name, labels)
+    with open(dictionary_file_name, 'wb') as handle:
         pickle.dump(dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return detections, labels, dictionary
 
