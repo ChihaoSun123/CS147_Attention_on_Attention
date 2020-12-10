@@ -38,7 +38,6 @@ class Main_Model(tf.keras.Model):
         return accuracy
 
 def train(model, train_image, train_caption, padding_index):
-    #print(type(train_caption))
     decoder_input = train_caption[0:,0:14]
     labels = train_caption[0:,1:15]
     mask = tf.convert_to_tensor(np.where(np.asarray(labels)==padding_index, 0, 1))
@@ -48,9 +47,8 @@ def train(model, train_image, train_caption, padding_index):
     while end_index <= train_image.shape[0]:
         with tf.GradientTape() as tape:
             probs = model(train_image[start_index:end_index], decoder_input[start_index:end_index])
-            #print("shape of probs: ")
-            #print(probs.shape)
             loss = model.loss(probs, labels[start_index:end_index], mask[start_index:end_index])
+            print("loss: ", loss)
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         start_index += model.batch_size
@@ -85,33 +83,24 @@ def main():
     train_caption = captions[0:20]
     test_caption = captions[20:30]
 
-    #print("dictionary size: ")
-    #print(len(dictionary))
-
-    # test whether model produces result of expected dimensions
-    #decoder_input = train_caption[0:,0:14]
-    #labels = train_caption[0:,1:15]
-    #probs = model(images, train_caption[0:10])
-    #print("probs shape: ")
-    #print(probs.shape)
-
     model = Main_Model(len(dictionary))
-    #counter = tf.Variable(0)
+    counter = tf.Variable(0)
 
-    #ckpt = tf.train.Checkpoint(model = model, counter = counter)
-    #manager = tf.train.CheckpointManager(ckpt, './tf_ckpts', max_to_keep=3)
+    ckpt = tf.train.Checkpoint(model = model, counter = counter)
+    manager = tf.train.CheckpointManager(ckpt, './tf_ckpts', max_to_keep=3)
 
     for epoch in range(4):
-        #ckpt.restore(manager.latest_checkpoint)
-        #if manager.latest_checkpoint:
-        #    print("Restored from {}".format(manager.latest_checkpoint))
-        #else:
-        #    print("Initializing from scratch.")
+        print("Epoch ", epoch+1)
+        ckpt.restore(manager.latest_checkpoint)
+        if manager.latest_checkpoint:
+            print("Restored from {}".format(manager.latest_checkpoint))
+        else:
+            print("Initializing from scratch.")
 
         train(model, train_image, train_caption, dictionary['<PAD>'])
-        #ckpt.counter.assign_add(1)
-        #manager.save()
-        #print('This is the run {} of this program'.format(ckpt.counter.read_value()))
+        ckpt.counter.assign_add(1)
+        manager.save()
+        print('This is the run {} of this program'.format(ckpt.counter.read_value()))
         perplexity, accuracy = test(model, test_image, test_caption, dictionary['<PAD>'])
         print('perplexity:', perplexity)
         print('accuracy:', accuracy)

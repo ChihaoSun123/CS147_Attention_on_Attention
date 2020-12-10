@@ -16,11 +16,11 @@ class Decoder_Model(tf.keras.layers.Layer):
         super(Decoder_Model, self).__init__()
 
         self.vocab_size = vocab_size
-        self.embedding_size = 1024
+        self.embedding_size = 81
         self.batch_size = 64
-        self.RNN_size = 1024
+        self.RNN_size = 81
         self.learning_rate = 0.01
-        self.hidden_layer_size = 1024
+        self.hidden_layer_size = 81
 
         self.embedding_matrix = tf.Variable(tf.random.truncated_normal([self.vocab_size, self.embedding_size], stddev=0.1))
         self.lstm = tf.keras.layers.LSTM(self.RNN_size, return_sequences = True, return_state = True)
@@ -53,9 +53,9 @@ class Decoder_Model(tf.keras.layers.Layer):
         attended_output = self.AoA.call(lstm_output, encoder_output)
         dense_layer_1_output = self.dense_layer_1(attended_output)
         dense_layer_2_output = self.dense_layer_2(dense_layer_1_output)
-        probs = tf.nn.softmax(dense_layer_2_output)
+        #probs = tf.nn.softmax(dense_layer_2_output)
 
-        return probs
+        return dense_layer_2_output
 
 # dummy test of vocab size 50
 #model = Decoder_Model(50)

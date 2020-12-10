@@ -13,7 +13,7 @@ class AoAEncoder(tf.keras.layers.Layer):
         self.hidden_layer_size = 1024
         self.embedding_sz = 81
         self.AoA = Transformer_AoA(self.embedding_sz)
-        self.expander = tf.keras.layers.Dense(self.hidden_layer_size)
+        #self.expander = tf.keras.layers.Dense(self.hidden_layer_size)
 
     def call(self, inputs):
         """
@@ -27,8 +27,8 @@ class AoAEncoder(tf.keras.layers.Layer):
         :return: a refined version of the feature vectors A' of shape [batch_size x output_channels x dimension]
         """
         refined = self.AoA(inputs)
-        refined_expanded = self.expander(refined)
-        return refined_expanded
+        #refined_expanded = self.expander(refined)
+        return refined
 
 # inputs = get_data(num_images=10)
 # images = inputs

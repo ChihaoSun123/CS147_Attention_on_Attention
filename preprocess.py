@@ -123,7 +123,6 @@ def add_START_and_STOP(caption_labels):
             for i in range(15-len(caption_labels[x])):
                 caption_labels[x].append("<PAD>")
         
-        #print(len(caption_labels[x]))
     return caption_labels
 
 
@@ -147,7 +146,7 @@ def create_dictionary(sentences):
                 count_dictionary[word] += 1
 
     for key in count_dictionary:
-        if count_dictionary[key] <= 5:
+        if count_dictionary[key] <= 1:
             continue
         else:
             index_dictionary[key] = index_num
