@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.keras import Model
 from CNN import AoAEncoder
 from Decoder import Decoder_Model
-from preprocess import get_data
+from preprocess600 import get_data
 
 class Main_Model(tf.keras.Model):
     def __init__(self, vocab_size):
@@ -77,11 +77,12 @@ def test(model, test_image, test_caption, padding_index):
     return my_perplexity, my_accuracy
 
 def main():
-    images, captions, dictionary = get_data(num_images = 30)
-    train_image = images[0:20]
-    test_image = images[20:30]
-    train_caption = captions[0:20]
-    test_caption = captions[20:30]
+    images, captions, dictionary = get_data()
+    train_image = images[0:540]
+    test_image = images[540:600]
+    train_caption = captions[0:540]
+    test_caption = captions[540:600]
+    print("loaded!!!!!!")
 
     model = Main_Model(len(dictionary))
     counter = tf.Variable(0)
