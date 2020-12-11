@@ -2,13 +2,31 @@ import numpy as np
 import tensorflow as tf
 import numpy as np
 
+"""
+Model uses two Transformer_AoA layers: one for the encoder and one for the decoder
+
+The Transformer_AoA class and its helper layers are based on (extensively modified from!)
+my implementation of the Transformer model for the Machine Translation assignment, and therefore
+in turn is based on the stencil provided to us by Professor Ritchie and the CS 1470 staff.
+
+(Specifically, the AoA development went like:
+-->	modify Machine Translation transformer to use multiheaded attention (without breaking it)
+--> modify that to use Attention on Attention design (without breaking it)
+--> transplant code over to our project
+--> further modify code to fit our tensor shape/dimensions,
+	and have the correct number of transformer Blocks and recurrent connections / layer normalization
+	depending on whether it's the encoder or decoder Transformer_AoA
+
+(just stating here so there's full written credit! this was also discussed with our TA during development))
+"""
+
 def Attention_Matrix(K, Q, use_mask=False):
 	"""
 
 	Compute attention matrix for a single attention head.
 
-	:param K: is [batch_size x window_size_keys x embedding_size]
-	:param Q: is [batch_size x window_size_queries x embedding_size]
+	:param K: is [batch_size x size_keys x embedding_size]
+	:param Q: is [batch_size x size_queries x embedding_size]
 	:return: attention matrix
 	"""
 	
@@ -67,8 +85,10 @@ class Multi_Headed(tf.keras.layers.Layer):
 	def __init__(self, emb_sz, use_mask):
 		super(Multi_Headed, self).__init__()
 		
-		# Initialize heads
+		# Initialize heads, each with output attentions to be concatenated
 		self.split_emb_sz = int(emb_sz/8)
+		# (one head will have larger output size than others if embedding size
+		# is not divisible by 8)
 		self.remainder_sz = emb_sz - (7*self.split_emb_sz)
 
 		self.head_0 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
@@ -79,8 +99,6 @@ class Multi_Headed(tf.keras.layers.Layer):
 		self.head_5 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
 		self.head_6 = Atten_Head(emb_sz, self.split_emb_sz, use_mask=use_mask)
 		self.head_7 = Atten_Head(emb_sz, self.remainder_sz, use_mask=use_mask)
-		# print(self.split_emb_sz)
-		# print(self.remainder_sz)
 
 		# Matrix for concatenated vectors, W^O
 		self.WO = self.add_weight(name="weightsO",shape=[emb_sz,emb_sz])
@@ -93,11 +111,6 @@ class Multi_Headed(tf.keras.layers.Layer):
 		self.gate_v = tf.keras.layers.Dense(units=emb_sz, activation=None, use_bias=True)
 		self.gate_q = tf.keras.layers.Dense(units=emb_sz, activation=None, use_bias=False) 
 		self.gate_sigmoid = tf.keras.layers.Activation('sigmoid')
-
-		# self.WG_q = self.add_weight(name="weightsG_q",shape=[emb_sz,emb_sz])
-		# self.WG_v = self.add_weight(name="weightsG_v",shape=[emb_sz,emb_sz])
-		# self.WI_q = self.add_weight(name="weightsI_q",shape=[emb_sz,emb_sz])
-		# self.WI_v = self.add_weight(name="weightsI_v",shape=[emb_sz,emb_sz])
 
 
 	@tf.function
@@ -127,12 +140,7 @@ class Multi_Headed(tf.keras.layers.Layer):
 
 		# Combine the attentions from each head
 		concat_heads = tf.concat(values=attentions, axis=2)
-		#print("concat shape:")
-		#print(concat_heads.shape)
-
 		attended = tf.matmul(concat_heads, self.WO)
-		#print("post-linear shape:")
-		#print(attended.shape)
 
 		# ATTENTION ON ATTENTION:
 
@@ -140,8 +148,6 @@ class Multi_Headed(tf.keras.layers.Layer):
 		# (each head has its own Q = (query input) times WQ which need to be combined
 		# for calculating the information and gate vectors)
 		Q = tf.concat(values=Qs, axis=2)
-		# print("Concat Q shape:")
-		# print(Q.shape)
 
 		# I  =  W^q_i Q  +  W^v_i Vhat  +  bias^i
 		# (bias is included in the information_v keras layer)
@@ -166,15 +172,11 @@ class Transformer_Block(tf.keras.layers.Layer):
 			self.self_context_atten = Atten_Head(emb_sz,emb_sz,use_mask=False) if not multi_headed else Multi_Headed(emb_sz,use_mask=False)
 		else:
 			self.self_atten = Atten_Head(emb_sz,emb_sz,use_mask=is_decoder) if not multi_headed else Multi_Headed(emb_sz,use_mask=is_decoder)
-			# Decoder AoA does not use layer norm or recurrent connection!
+			# Decoder AoA block does not use layer norm or recurrent connection!
 			self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
 
 	@tf.function
 	def call(self, inputs, context=None):
-		"""
-		:param inputs: 
-		:context: the refined feature tensor A (for the decoder, for keys and values, otherwise None)
-		"""
 
 		if self.is_decoder:
 			assert context is not None,"Decoder blocks require context"
@@ -187,18 +189,3 @@ class Transformer_Block(tf.keras.layers.Layer):
 			atten_out = self.layer_norm(atten_out)
 
 		return atten_out
-
-class Position_Encoding_Layer(tf.keras.layers.Layer):
-	def __init__(self, window_sz, emb_sz):
-		super(Position_Encoding_Layer, self).__init__()
-		self.positional_embeddings = self.add_weight("pos_embed",shape=[window_sz, emb_sz])
-
-	@tf.function
-	def call(self, x):
-		"""
-		Adds positional embeddings  
-
-		:param x: [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ] the input embeddings fed to the encoder
-		:return: [BATCH_SIZE x (ENG/FRN)_WINDOW_SIZE x EMBEDDING_SIZE ] new word embeddings with added positional encodings
-		"""
-		return x+self.positional_embeddings
