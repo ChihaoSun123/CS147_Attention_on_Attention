@@ -18,4 +18,9 @@ The decoder of the model. Contains the LSTM structure that generates probabiliti
 The main model that connects all the above components to form the whole model.
 Also contains the main(), train(), and test() function.
 
+## Other .txt & .pickle files
+These are the result of preprocessing. Calling the COCO API or the MRCNN is time-consuming. The preprocess program reads directly from these files when accessing previously used data to save time.
+
+
+
 # To run the model, call Main_Model.py.
