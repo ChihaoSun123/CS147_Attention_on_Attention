@@ -8,7 +8,7 @@ from preprocess600 import get_data
 class Main_Model(tf.keras.Model):
     def __init__(self, vocab_size):
         super(Main_Model, self).__init__()
-        self.batch_size = 10
+        self.batch_size = 30
         self.learning_rate = 0.01
 
         self.encoder = AoAEncoder()
