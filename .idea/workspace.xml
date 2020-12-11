@@ -20,8 +20,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="64e3a2b8-a059-48f4-8e6d-786755f42c51" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Main_Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main_Model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cocoapi/PythonAPI/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/cocoapi/PythonAPI/Makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cocoapi/PythonAPI/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/cocoapi/PythonAPI/setup.py" afterDir="false" />
     </list>
