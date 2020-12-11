@@ -8,3 +8,14 @@ Generates dictionary based on captions, and converts words in the captions into 
 ## CNN.py
 The encoder of the model except for the MRCNN. Generates image encodings based on image features.
 
+## AoA.py & AoA_internals.py
+The attention on attention module that can be attached to both the encoder and decoder depending on arguments passed to it during initialization.
+
+## Decoder.py
+The decoder of the model. Contains the LSTM structure that generates probabilities across vocabularies.
+
+## Main_Model.py
+The main model that connects all the above components to form the whole model.
+Also contains the main(), train(), and test() function.
+
+# To run the model, call Main_Model.py.
